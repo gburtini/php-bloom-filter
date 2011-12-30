@@ -5,12 +5,13 @@ class Bloom {
 
    protected $bitArray;
    protected $hashCount;
-   protected $count;
+   protected $count = 0;
 
    function constructorElements($elementsCount) {
       $predictSize = $this->desirableSize($elementsCount);
       $predictHashes = $this->desirableHashCount($predictSize, $elementsCount);
-      return $this->__construct($predictSize, $predictHashes);
+
+      return $this->constructorSize($predictSize, $predictHashes);
    }
 
    function constructorSize($size, $hashCount, $hash=null) {
@@ -31,7 +32,7 @@ class Bloom {
    function __construct() {   // should maybe use __call to do this overloading.
       $count = func_num_args();
       if($count == 0)
-         return trigger_error("Not enough arguments passed to constructor for Bloom.");
+         return;  // for load.
 
       if($count == 1)
          return $this->constructorElements (func_get_arg(0));
@@ -54,7 +55,7 @@ class Bloom {
 
    //m = -n*ln(p)/(ln(2)^2) // probability = desired probability of a false positive.
    public static function desirableSize($elements, $probability=0.05) {
-      return (-$elements * log($probability) / (pow(log(2), 2)));
+      return ceil(-$elements * log($probability) / (pow(log(2), 2)));
    }
    //k = 0.7*m/n
    public static function desirableHashCount($size, $elements) {
@@ -69,10 +70,11 @@ class Bloom {
       }
 
       $this->count++;
+      $bits = $this->bits($key);
 
-      foreach($this->bits($key) as $bit)
-         $this->bitArray[$bit] = 1;
-
+      foreach($bits as $bit) {
+         $this->bitArray[$bit] = true;
+      }
       return true;
    }
 
@@ -104,10 +106,12 @@ class Bloom {
       mt_srand($this->computeHash($key));
       $size = $this->bitArray->getSize();
 
+
       $return = new SplFixedArray($this->hashCount);
       for($i=0; $i<$this->hashCount; $i++) {
-         $return[] = mt_rand(0, $size);
+         $return[$i] = mt_rand(0, $size-1);
       }
+
       return $return;
    }
 
@@ -116,10 +120,27 @@ class Bloom {
       return $function($string);
    }
 
+   public function save() {
+      // definitely needs a better save function. serialize sucks.
+      return serialize(array('bitArray'=>$this->bitArray->toArray(), 'count'=>$this->count));
+   }
+
+   public function load($data) {
+      $data = unserialize($data);
+      $this->bitArray = SplFixedArray::fromArray($data['bitArray']);
+      $this->count = $data['count'];
+      return true;
+   }
+
    public function __toString() {
-      $string = "Size " . $this->bitArray->getSize() . " bloom filter currently holding " . $count . " elements.\n";
-      for($i=0; $i<$this->bitArray->getSize(); $i++) {
-         $string .= ($this->bitArray[$i] == 1) ? "1" : "0";
+      $size = $this->bitArray->getSize();
+
+      $string = "Size " . $size . " bloom filter currently holding " . $this->count . " elements.\n";
+
+      if($size < 10000) {
+         for($i=0; $i<$size; $i++) {
+            $string .= ($this->bitArray[$i] == 1) ? "1" : "0";
+         }
       }
       $string .= "\n";
       return $string;
