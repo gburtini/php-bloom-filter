@@ -136,6 +136,11 @@ class Bloom {
    }
 
    public function load($data) {
+      $this->loadBloomData($data);
+      return true;
+   }
+
+   protected function loadBloomData($data) {
       $data = gzuncompress($data);
       $data = explode(" ", $data, 4);
       $this->count = $data[0];
@@ -149,7 +154,6 @@ class Bloom {
             $this->bitArray[$i] = true;
       }
 
-      return true;
    }
 
    public function __toString() {

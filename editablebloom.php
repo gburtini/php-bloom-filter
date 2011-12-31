@@ -83,6 +83,21 @@ class EditableBloom extends Bloom {
       return $this->add($data);
    }
 
+   public function save() {
+      $this->consolidate();
+
+      $data = parent::save();
+      $data .= "[--DATA--]";
+      $data .= gzcompress(serialize($this->data), 9);
+      return $data;
+   }
+
+   public function load($data){
+      $data = explode("[--DATA--]", $data, 2);
+      $this->loadBloomData($data[0]);
+      $this->data = unserialize(gzuncompress($data[1]));
+   }
+
    public function toNoneditableBloom() {
       $return = new Bloom($this->bitArray->getSize(), $this->hashCount, $this->hashFunction);
 
