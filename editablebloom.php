@@ -10,6 +10,7 @@
  * for the value directly. This is useful if most of your requests are false, as
  * the bloom filter should still be faster than the in_array check.
  */
+
 class EditableBloom extends Bloom {
    private $data;
    private $deleted;
@@ -80,6 +81,16 @@ class EditableBloom extends Bloom {
       $this->deleted = null;
 
       return $this->add($data);
+   }
+
+   public function toNoneditableBloom() {
+      $return = new Bloom($this->bitArray->getSize(), $this->hashCount, $this->hashFunction);
+
+      foreach($this->data as $datum) {
+         $return->add($datum);
+      }
+
+      return $return;
    }
 }
 

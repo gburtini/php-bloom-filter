@@ -89,7 +89,7 @@ class Bloom {
 
       foreach($this->bits($key) as $bit)
       {
-         if(!$this->bitArray[$bit])
+         if($this->bitArray[$bit] !== true)
             return false;
       }
       return true; // possibly true.
