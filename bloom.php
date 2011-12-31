@@ -121,14 +121,34 @@ class Bloom {
    }
 
    public function save() {
-      // definitely needs a better save function. serialize sucks.
-      return serialize(array('bitArray'=>$this->bitArray->toArray(), 'count'=>$this->count));
+      $file = $this->count . " " . $this->hashCount . " " . $this->hashFunction . " ";
+
+      for($i=0;$i<$this->bitArray->getSize();$i++)
+      {
+         $output = "0";
+         if($this->bitArray[$i] == 1)
+            $output = "1";
+         $file .= $output;
+      }
+      $file = gzcompress($file, 9);
+
+      return $file;
    }
 
    public function load($data) {
-      $data = unserialize($data);
-      $this->bitArray = SplFixedArray::fromArray($data['bitArray']);
-      $this->count = $data['count'];
+      $data = gzuncompress($data);
+      $data = explode(" ", $data, 4);
+      $this->count = $data[0];
+      $this->hashCount = $data[1];
+      $this->hashFunction = $data[2];
+      $length = strlen($data[3]);
+
+      $this->bitArray = new SplFixedArray($length);
+      for($i=0;$i<$length;$i++) {
+         if($data[3][$i] == 1)
+            $this->bitArray[$i] = true;
+      }
+
       return true;
    }
 

@@ -13,7 +13,6 @@ class SpellCheck {
 
       $words = file_get_contents($wordsList);
       $words = explode("\n", $words);
-
       $this->bloom = new Bloom(count($words));
       foreach($words as $word) {
          $this->bloom->add($word);
@@ -28,7 +27,7 @@ class SpellCheck {
 
    public function save($file) {
       $data = $this->bloom->save();
-      var_dump(file_put_contents($file, $data));
+      return (file_put_contents($file, $data));
    }
 
    public function checkSpelling($word) {
@@ -38,6 +37,7 @@ class SpellCheck {
 
 //$test = new SpellCheck("/usr/share/dict/words");
 //$test->save("spelldb");
+
 
 $test = new SpellCheck();
 $test->load("spelldb");
